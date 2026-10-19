@@ -56,6 +56,9 @@ input,select{font-size:14px;padding:10px;border:1px solid var(--fio-cl);border-r
 .apagar{border:0;background:transparent;color:var(--txt);font-size:18px;cursor:pointer;padding:0 4px}
 .chips{margin-bottom:6px}
 .chip{display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--fio-cl);border-radius:8px;padding:4px 8px;margin:0 6px 6px 0;font-size:13px}
+.av{width:28px;height:28px;border-radius:50%;object-fit:cover;flex:none;vertical-align:middle}
+.ini{display:inline-flex;align-items:center;justify-content:center;background:var(--azul);color:#F6F6F6;font-weight:700;font-size:13px}
+.avb{border:0;background:none;padding:0;cursor:pointer;display:inline-flex}
 .vazio{margin:8px 0;font-size:14px}
 .acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .msg{font-size:13px;margin-top:8px;min-height:18px}
@@ -187,8 +190,35 @@ function apagarCat(id){
 function addPessoa(cat){
  const n=$('pn').value.trim();
  if(!n)return;
- estado.pessoas.push({id:idNovo(),cat:cat,nome:n,sexo:$('ps').value});guardar();render();
+ const p={id:idNovo(),cat:cat,nome:n,sexo:$('ps').value},f=$('pf').files&&$('pf').files[0];
+ const fim=()=>{estado.pessoas.push(p);guardar();render();};
+ if(f)lerFoto(f,d=>{if(d)p.foto=d;fim();});else fim();
 }
+// Fotos: corta ao centro em quadrado e reduz para 96px, para caber no localStorage
+function lerFoto(f,cb){
+ const r=new FileReader();
+ r.onerror=()=>cb('');
+ r.onload=()=>{
+  const im=new Image();
+  im.onerror=()=>cb('');
+  im.onload=()=>{
+   const c=document.createElement('canvas'),s=96,m=Math.min(im.width,im.height);
+   c.width=c.height=s;
+   c.getContext('2d').drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,s,s);
+   cb(c.toDataURL('image/jpeg',.8));
+  };
+  im.src=r.result;
+ };
+ r.readAsDataURL(f);
+}
+let fotoDe='';
+function escolherFoto(id){fotoDe=id;$('pfx').click();}
+function mudarFoto(inp){
+ const f=inp.files&&inp.files[0],p=estado.pessoas.find(x=>x.id===fotoDe);
+ if(f&&p)lerFoto(f,d=>{if(d){p.foto=d;guardar();render();}});
+}
+// Avatar: foto ou inicial do nome
+function avatar(p){return p.foto?'<img class="av" src="'+p.foto+'" alt="">':'<span class="av ini">'+esc(p.nome.charAt(0).toUpperCase())+'</span>';}
 function apagarPessoa(id){
  estado.pessoas=estado.pessoas.filter(p=>p.id!==id);
  estado.itens.forEach(i=>i.com=(i.com||[]).filter(x=>x!==id));
@@ -266,8 +296,8 @@ function cartaoFilmes(){
 }
 function cartaoPessoas(id){
  const p=estado.pessoas.filter(x=>x.cat===id);
- return'<div class="cartao"><h2>Pessoas</h2><div class="form3"><input id="pn" placeholder="Nome" aria-label="Nome"><select id="ps" aria-label="Sexo"><option value="F">Feminino</option><option value="M">Masculino</option></select><button class="btn" onclick="addPessoa(\''+id+'\')">Adicionar</button></div>'
-  +(p.length?p.map(x=>'<span class="chip">'+(x.sexo==='F'?'♀':'♂')+' '+esc(x.nome)+(x.exemplo?' (exemplo)':'')+'<button class="apagar" onclick="apagarPessoa(\''+x.id+'\')" aria-label="Apagar">×</button></span>').join(''):'<p class="vazio">Adiciona as primeiras pessoas.</p>')+'</div>';
+ return'<div class="cartao"><h2>Pessoas</h2><div class="form3"><input id="pn" placeholder="Nome" aria-label="Nome"><select id="ps" aria-label="Sexo"><option value="F">Feminino</option><option value="M">Masculino</option></select><button class="btn" onclick="addPessoa(\''+id+'\')">Adicionar</button></div><div class="chips"><label class="nota">Foto de perfil (opcional): <input type="file" id="pf" accept="image/*"></label></div><input type="file" id="pfx" accept="image/*" hidden onchange="mudarFoto(this)">'
+  +(p.length?p.map(x=>'<span class="chip"><button class="avb" onclick="escolherFoto(\''+x.id+'\')" aria-label="Mudar foto" title="Mudar foto">'+avatar(x)+'</button>'+(x.sexo==='F'?'♀':'♂')+' '+esc(x.nome)+(x.exemplo?' (exemplo)':'')+'<button class="apagar" onclick="apagarPessoa(\''+x.id+'\')" aria-label="Apagar">×</button></span>').join(''):'<p class="vazio">Adiciona as primeiras pessoas.</p>')+'</div>';
 }
 function categoria(id){
  const c=todas().find(x=>x.id===id);
@@ -277,7 +307,7 @@ function categoria(id){
  let h=(c.filmes?cartaoFilmes():'')+(c.pessoas?cartaoPessoas(id):'');
  h+='<div class="cartao"><h2>'+(c.filmes?'Para ver':esc(c.nome))+'</h2>'
   +'<div class="form"><input id="f-tit" placeholder="'+c.dica+'" aria-label="Título"><input id="f-data" type="date" aria-label="Data"><input id="f-nota" placeholder="Nota (opcional)" aria-label="Nota"><button class="btn" onclick="adicionar(\''+id+'\')">Adicionar</button></div>';
- if(c.pessoas&&pess.length)h+='<div class="chips"><span class="nota">Com quem: </span>'+pess.map(x=>'<label class="chip"><input type="checkbox" class="cq" value="'+x.id+'"> '+esc(x.nome)+'</label>').join('')+'</div>';
+ if(c.pessoas&&pess.length)h+='<div class="chips"><span class="nota">Com quem: </span>'+pess.map(x=>'<label class="chip"><input type="checkbox" class="cq" value="'+x.id+'"> '+avatar(x)+' '+esc(x.nome)+'</label>').join('')+'</div>';
  h+='<div class="msg" id="msg"></div>';
  if(!l.length)h+='<p class="vazio">Ainda não há nada aqui. Adiciona o primeiro item.</p>';
  h+=l.map(i=>linha(i,false)).join('');
