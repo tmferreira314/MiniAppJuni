@@ -58,6 +58,9 @@ input,select{font-size:14px;padding:10px;border:1px solid var(--fio-cl);border-r
 .chip{display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--fio-cl);border-radius:8px;padding:4px 8px;margin:0 6px 6px 0;font-size:13px}
 .av{width:28px;height:28px;border-radius:50%;object-fit:cover;flex:none;vertical-align:middle}
 .ini{display:inline-flex;align-items:center;justify-content:center;background:var(--azul);color:#F6F6F6;font-weight:700;font-size:13px}
+.lb{position:fixed;inset:0;background:rgba(9,68,161,.94);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:30;padding:16px;color:#F6F6F6;font-weight:700;font-size:20px}
+.lb.aberto{display:flex}
+.lb img{width:min(80vw,360px);height:min(80vw,360px);object-fit:cover;border-radius:16px;border:3px solid var(--ciano)}
 .avb{border:0;background:none;padding:0;cursor:pointer;display:inline-flex}
 .vazio{margin:8px 0;font-size:14px}
 .acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
@@ -97,6 +100,7 @@ footer p{margin:4px 0}
 </div>
 <div class="veu" id="veu" onclick="menuFechar()"></div>
 <aside class="menu" id="menu"></aside>
+<div class="lb" id="lb" onclick="fecharFoto()"></div>
 
 <script>
 /* ---------- Estado ---------- */
@@ -194,7 +198,7 @@ function addPessoa(cat){
  const fim=()=>{estado.pessoas.push(p);guardar();render();};
  if(f)lerFoto(f,d=>{if(d)p.foto=d;fim();});else fim();
 }
-// Fotos: corta ao centro em quadrado e reduz para 96px, para caber no localStorage
+// Fotos: corta ao centro em quadrado e reduz para 320px (boa para o close-up), para caber no localStorage
 function lerFoto(f,cb){
  const r=new FileReader();
  r.onerror=()=>cb('');
@@ -202,7 +206,7 @@ function lerFoto(f,cb){
   const im=new Image();
   im.onerror=()=>cb('');
   im.onload=()=>{
-   const c=document.createElement('canvas'),s=96,m=Math.min(im.width,im.height);
+   const c=document.createElement('canvas'),s=320,m=Math.min(im.width,im.height);
    c.width=c.height=s;
    c.getContext('2d').drawImage(im,(im.width-m)/2,(im.height-m)/2,m,m,0,0,s,s);
    cb(c.toDataURL('image/jpeg',.8));
@@ -211,6 +215,16 @@ function lerFoto(f,cb){
  };
  r.readAsDataURL(f);
 }
+// Close-up: abre a foto em grande (sem foto, abre o seletor para a pôr)
+function verFoto(id){
+ const p=estado.pessoas.find(x=>x.id===id);
+ if(!p)return;
+ if(!p.foto){escolherFoto(id);return;}
+ $('lb').innerHTML='<img src="'+p.foto+'" alt="'+esc(p.nome)+'"><div>'+esc(p.nome)+'</div><button class="btn">Fechar</button>';
+ $('lb').classList.add('aberto');
+}
+function fecharFoto(){$('lb').classList.remove('aberto');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')fecharFoto();});
 let fotoDe='';
 function escolherFoto(id){fotoDe=id;$('pfx').click();}
 function mudarFoto(inp){
@@ -297,7 +311,7 @@ function cartaoFilmes(){
 function cartaoPessoas(id){
  const p=estado.pessoas.filter(x=>x.cat===id);
  return'<div class="cartao"><h2>Pessoas</h2><div class="form3"><input id="pn" placeholder="Nome" aria-label="Nome"><select id="ps" aria-label="Sexo"><option value="F">Feminino</option><option value="M">Masculino</option></select><button class="btn" onclick="addPessoa(\''+id+'\')">Adicionar</button></div><div class="chips"><label class="nota">Foto de perfil (opcional): <input type="file" id="pf" accept="image/*"></label></div><input type="file" id="pfx" accept="image/*" hidden onchange="mudarFoto(this)">'
-  +(p.length?p.map(x=>'<span class="chip"><button class="avb" onclick="escolherFoto(\''+x.id+'\')" aria-label="Mudar foto" title="Mudar foto">'+avatar(x)+'</button>'+(x.sexo==='F'?'♀':'♂')+' '+esc(x.nome)+(x.exemplo?' (exemplo)':'')+'<button class="apagar" onclick="apagarPessoa(\''+x.id+'\')" aria-label="Apagar">×</button></span>').join(''):'<p class="vazio">Adiciona as primeiras pessoas.</p>')+'</div>';
+  +(p.length?p.map(x=>'<span class="chip"><button class="avb" onclick="verFoto(\''+x.id+'\')" aria-label="Ver foto em grande" title="Ver foto em grande">'+avatar(x)+'</button>'+(x.sexo==='F'?'♀':'♂')+' '+esc(x.nome)+(x.exemplo?' (exemplo)':'')+'<button class="apagar" onclick="escolherFoto(\''+x.id+'\')" aria-label="Mudar foto" title="Mudar foto">📷</button><button class="apagar" onclick="apagarPessoa(\''+x.id+'\')" aria-label="Apagar">×</button></span>').join(''):'<p class="vazio">Adiciona as primeiras pessoas.</p>')+'</div>';
 }
 function categoria(id){
  const c=todas().find(x=>x.id===id);
