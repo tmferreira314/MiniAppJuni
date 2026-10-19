@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Liforganizer</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* Cores da JUNITEC */
+:root{--azul:#175FAA;--claro:#F6F6F6;--txt:#3D4F6B;--ciano:#74D1EF;--escuro:#0944A1;--sobre:#E2EEFF;--fio-az:#4D85C2;--fio-cl:#C9DAEE;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--azul:#175FAA}}
+:root[data-theme="dark"]{--azul:#175FAA}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--azul);color:var(--sobre);font:400 15px/1.5 'Montserrat',Arial,sans-serif}
+.wrap{max-width:920px;margin:0 auto;padding:24px 16px 32px}
+.topo{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+h1{font-weight:700;font-size:28px;margin:0 0 8px;color:#F6F6F6}
+.barra{width:120px;height:6px;border-radius:6px;background:var(--ciano);margin:0 0 14px}
+.intro{margin:0 0 18px}
+button,input,select{font-family:inherit}
+.btn{font-weight:700;font-size:14px;padding:10px 16px;border-radius:8px;border:0;background:var(--ciano);color:var(--escuro);cursor:pointer}
+.btn.sec{background:#fff;color:var(--azul);border:1px solid var(--azul)}
+/* Menu lateral */
+.veu{position:fixed;inset:0;background:rgba(9,68,161,.55);display:none;z-index:15}
+.veu.aberto{display:block}
+.menu{position:fixed;top:0;right:0;bottom:0;width:280px;max-width:85%;background:var(--claro);color:var(--txt);transform:translateX(100%);transition:transform .2s;z-index:20;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px 16px;overflow:auto}
+.menu.aberto{transform:none}
+.menu h2{color:var(--azul);margin:0 0 10px;font-size:20px}
+.mi{display:block;width:100%;text-align:left;font-weight:600;font-size:14px;padding:10px 12px;margin-bottom:6px;border-radius:8px;border:1px solid var(--fio-cl);background:#fff;color:var(--azul);cursor:pointer}
+.mi.ativa{background:var(--ciano);color:var(--escuro);border-color:var(--ciano)}
+.nova{display:grid;gap:6px;margin-top:14px;border-top:1px solid var(--fio-cl);padding-top:14px}
+/* Cartões */
+.cartao{background:var(--claro);color:var(--txt);border-radius:12px;padding:18px;margin-bottom:14px}
+.cartao h2{color:var(--azul);font-weight:700;font-size:20px;margin:0 0 12px}
+input,select{font-size:14px;padding:10px;border:1px solid var(--fio-cl);border-radius:8px;background:#fff;color:var(--txt);min-width:0}
+.form{display:grid;grid-template-columns:2fr 1fr 2fr auto;gap:8px;margin-bottom:10px}
+.form3{display:grid;grid-template-columns:2fr 1fr auto;gap:8px;margin-bottom:10px}
+.crit{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:6px}
+.crit label{font-size:12px;font-weight:600;display:grid;gap:4px}
+.periodos{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.periodos button{font-weight:600;font-size:13px;padding:8px 14px;border-radius:8px;border:1px solid var(--fio-cl);background:#fff;color:var(--azul);cursor:pointer}
+.periodos button.ativa{background:var(--azul);color:#F6F6F6;border-color:var(--azul)}
+.resultado{background:var(--azul);border-radius:12px;padding:16px;display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-bottom:14px;border:1px solid var(--fio-az)}
+.resultado .num{font-weight:800;font-size:56px;line-height:1;color:var(--ciano)}
+.dia{font-weight:700;color:var(--azul);font-size:14px;text-transform:capitalize;margin:14px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--fio-cl)}
+.dia .atraso{background:#fff;border:1px solid var(--azul);border-radius:6px;font-size:11px;padding:1px 6px;margin-left:6px;text-transform:none}
+.linha{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--fio-cl)}
+.linha input[type=checkbox]{margin-top:4px;width:18px;height:18px;accent-color:var(--azul);flex:none;padding:0}
+.corpo{flex:1;min-width:0}
+.tit{font-weight:600;word-break:break-word}
+.linha.feito .tit{text-decoration:line-through;opacity:.6}
+.nota{font-size:13px;opacity:.85}
+.tag{display:inline-block;font-size:11px;font-weight:600;border-radius:6px;padding:2px 8px;background:var(--ciano);color:var(--escuro);border:0;cursor:pointer;margin-right:4px}
+.tag.ex{background:#fff;border:1px solid var(--fio-cl);color:var(--txt);cursor:default}
+.apagar{border:0;background:transparent;color:var(--txt);font-size:18px;cursor:pointer;padding:0 4px}
+.chips{margin-bottom:6px}
+.chip{display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--fio-cl);border-radius:8px;padding:4px 8px;margin:0 6px 6px 0;font-size:13px}
+.vazio{margin:8px 0;font-size:14px}
+.acoes{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.msg{font-size:13px;margin-top:8px;min-height:18px}
+/* Pódio */
+.podio{display:flex;justify-content:center;align-items:flex-end;gap:10px}
+.pod{flex:1;max-width:160px;text-align:center;display:flex;flex-direction:column;justify-content:flex-end}
+.pt{font-size:12px;font-weight:600;margin-bottom:4px;word-break:break-word}
+.bar{border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;transition:height .3s}
+.bar.p1{background:var(--ciano);color:var(--escuro)}
+.bar.p2,.bar.p3{background:var(--azul);color:#F6F6F6}
+/* Jogos */
+.grelha{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:340px}
+.carta{aspect-ratio:1;font-size:28px;border-radius:8px;border:1px solid var(--fio-cl);background:var(--azul);color:#F6F6F6;cursor:pointer}
+.carta.v{background:#fff;color:var(--txt)}
+.reflexo{width:100%;height:140px;border-radius:8px;border:0;font-weight:700;font-size:18px;cursor:pointer}
+.reflexo.espera{background:var(--azul);color:#F6F6F6}
+.reflexo.ja{background:var(--ciano);color:var(--escuro)}
+.jogo{margin-top:14px}
+footer{margin-top:24px;font-size:12px;color:var(--sobre)}
+footer p{margin:4px 0}
+@media (max-width:640px){h1{font-size:23px}.form,.form3{grid-template-columns:1fr}.resultado .num{font-size:44px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="topo">
+  <div><h1>Liforganizer</h1><div class="barra"></div></div>
+  <button class="btn" onclick="menuAbrir()" aria-label="Abrir menu">☰ Menu</button>
+ </div>
+ <p class="intro">O teu segundo cérebro para a vida fora do trabalho: hobbies, amigos, família, filmes e o que mais quiseres. Vê o que vem aí hoje, esta semana ou este mês.</p>
+ <main id="conteudo"></main>
+ <footer>
+  <p>Os dados ficam guardados só neste browser (localStorage). Os itens marcados “exemplo” são fictícios.</p>
+  <p>Feito pela JUNITEC</p>
+ </footer>
+</div>
+<div class="veu" id="veu" onclick="menuFechar()"></div>
+<aside class="menu" id="menu"></aside>
+
+<script>
+/* ---------- Estado ---------- */
+const $=i=>document.getElementById(i);
+const BASE=[
+ {id:'hobbies',nome:'Hobbies',dica:'Ex.: ensaio de guitarra'},
+ {id:'extra',nome:'Extracurriculares',dica:'Ex.: aula de yoga'},
+ {id:'amigos',nome:'Amigos',dica:'Ex.: jantar com amigos',pessoas:1},
+ {id:'familia',nome:'Família',dica:'Ex.: almoço de domingo',pessoas:1},
+ {id:'filmes',nome:'Filmes & Séries',dica:'Ex.: ver o novo episódio',filmes:1}
+];
+const CRIT=['Acting','Cinematography','Plot','Music','Characters'];
+const PERIODOS={dia:'Hoje',semana:'Esta semana',mes:'Este mês'};
+let aba='painel', periodo='semana', estado;
+const todas=()=>BASE.concat(estado.cats.map(c=>({id:c.id,nome:c.nome,dica:'Ex.: nova tarefa',custom:1})));
+const idNovo=()=>Math.random().toString(36).slice(2);
+const media=r=>Math.round(r.reduce((a,b)=>a+b,0)/r.length*10)/10;
+estado=carregar(); // só depois de idNovo e media existirem
+
+/* ---------- Datas ---------- */
+function iso(d){const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function somaDias(n){const d=new Date();d.setDate(d.getDate()+n);return iso(d);}
+function intervalo(p){
+ const h=new Date();
+ if(p==='dia')return[somaDias(0),somaDias(0)];
+ if(p==='semana'){const w=(h.getDay()+6)%7;return[somaDias(-w),somaDias(6-w)];}
+ return[iso(new Date(h.getFullYear(),h.getMonth(),1)),iso(new Date(h.getFullYear(),h.getMonth()+1,0))];
+}
+function formatarData(s){
+ if(s===somaDias(0))return'Hoje';
+ if(s===somaDias(1))return'Amanhã';
+ return new Date(s+'T00:00:00').toLocaleDateString('pt-PT',{weekday:'long',day:'numeric',month:'long'});
+}
+
+/* ---------- Guardar e carregar ---------- */
+function exemplos(){
+ const e=(c,t,d,n,com)=>({id:idNovo(),cat:c,titulo:t,data:somaDias(d),nota:n||'',feito:false,com:com||[],exemplo:1});
+ const p=(id,c,n,s)=>({id:id,cat:c,nome:n,sexo:s,exemplo:1});
+ const f=(t,r)=>({id:idNovo(),titulo:t,r:r,ov:media(r),exemplo:1});
+ return{
+  cats:[],rec:{},
+  pessoas:[p('p1','amigos','Ana','F'),p('p2','amigos','Rui','M'),p('p3','familia','Mãe','F'),p('p4','familia','Pai','M')],
+  filmes:[f('Filme A',[5,4,5,3,4]),f('Filme B',[3,3,4,5,3]),f('Série C',[4,5,3,4,5])],
+  itens:[
+   e('familia','Ligar à família',-1,'Ficou por fazer',['p3']),
+   e('hobbies','Ensaio de guitarra',0,'30 minutos'),
+   e('extra','Aula de yoga',0,'19h00'),
+   e('filmes','Ver um filme de ficção científica',1,'Escolher à noite'),
+   e('amigos','Jantar com amigos',2,'Reservar mesa',['p1','p2']),
+   e('familia','Almoço de domingo',4,'',['p3','p4']),
+   e('hobbies','Terminar o puzzle',9),
+   e('filmes','Começar uma série nova',15,'Lista de espera')
+  ]};
+}
+function carregar(){
+ try{const s=localStorage.getItem('liforganizer_v1');if(s)return JSON.parse(s);}catch(e){}
+ return exemplos();
+}
+function guardar(){try{localStorage.setItem('liforganizer_v1',JSON.stringify(estado));}catch(e){}}
+
+/* ---------- Ações ---------- */
+function esc(t){return String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function menuAbrir(){$('menu').classList.add('aberto');$('veu').classList.add('aberto');}
+function menuFechar(){$('menu').classList.remove('aberto');$('veu').classList.remove('aberto');}
+function irPara(a){aba=a;menuFechar();render();window.scrollTo(0,0);}
+function mudarPeriodo(p){periodo=p;render();}
+function alternar(id){const i=estado.itens.find(x=>x.id===id);if(i){i.feito=!i.feito;guardar();render();}}
+function apagar(id){estado.itens=estado.itens.filter(x=>x.id!==id);guardar();render();}
+function limparExemplos(){
+ ['itens','pessoas','filmes'].forEach(k=>estado[k]=estado[k].filter(x=>!x.exemplo));
+ guardar();render();
+}
+function adicionar(cat){
+ const t=$('f-tit').value.trim();
+ if(!t){$('msg').textContent='Escreve um título primeiro.';return;}
+ const com=[...document.querySelectorAll('.cq:checked')].map(x=>x.value);
+ estado.itens.push({id:idNovo(),cat:cat,titulo:t,data:$('f-data').value,nota:$('f-nota').value.trim(),feito:false,com:com});
+ guardar();render();
+}
+function novaCat(){
+ const n=$('nc').value.trim();
+ if(!n)return;
+ const id='c'+idNovo();
+ estado.cats.push({id:id,nome:n});guardar();irPara(id);
+}
+function apagarCat(id){
+ estado.cats=estado.cats.filter(c=>c.id!==id);
+ estado.itens=estado.itens.filter(i=>i.cat!==id);
+ guardar();irPara('painel');
+}
+function addPessoa(cat){
+ const n=$('pn').value.trim();
+ if(!n)return;
+ estado.pessoas.push({id:idNovo(),cat:cat,nome:n,sexo:$('ps').value});guardar();render();
+}
+function apagarPessoa(id){
+ estado.pessoas=estado.pessoas.filter(p=>p.id!==id);
+ estado.itens.forEach(i=>i.com=(i.com||[]).filter(x=>x!==id));
+ guardar();render();
+}
+// Filmes: lê as 5 notas e calcula o overall
+function notasForm(){return[...document.querySelectorAll('.cr')].map(s=>+s.value);}
+function prev(){$('pv').textContent=media(notasForm()).toFixed(1);}
+function addFilme(){
+ const t=$('ft').value.trim();
+ if(!t)return;
+ const r=notasForm();
+ estado.filmes.push({id:idNovo(),titulo:t,r:r,ov:media(r)});guardar();render();
+}
+function apagarFilme(id){estado.filmes=estado.filmes.filter(f=>f.id!==id);guardar();render();}
+function copiar(texto){
+ const m=$('msg'),ok=()=>{m.textContent='Copiado!';};
+ const alt=()=>{const t=document.createElement('textarea');t.value=texto;document.body.appendChild(t);t.select();try{document.execCommand('copy');ok();}catch(e){m.textContent='Não foi possível copiar.';}t.remove();};
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(texto).then(ok,alt);else alt();
+}
+
+/* ---------- Interface ---------- */
+function nomeCat(id){const c=todas().find(x=>x.id===id);return c?c.nome:'';}
+function nomesCom(i){return(i.com||[]).map(n=>{const p=estado.pessoas.find(x=>x.id===n);return p?p.nome:'';}).filter(Boolean).join(', ');}
+function linha(i,mostrarCat){
+ const com=nomesCom(i);
+ return'<div class="linha'+(i.feito?' feito':'')+'">'
+  +'<input type="checkbox" '+(i.feito?'checked':'')+' onchange="alternar(\''+i.id+'\')" aria-label="Feito">'
+  +'<div class="corpo"><div class="tit">'+esc(i.titulo)+'</div><div>'
+  +(mostrarCat?'<button class="tag" onclick="irPara(\''+i.cat+'\')">'+esc(nomeCat(i.cat))+'</button>':'')
+  +(i.exemplo?'<span class="tag ex">exemplo</span>':'')
+  +(!mostrarCat&&i.data?'<span class="nota">'+esc(formatarData(i.data))+'</span>':'')+'</div>'
+  +(com?'<div class="nota">Com: '+esc(com)+'</div>':'')
+  +(i.nota?'<div class="nota">'+esc(i.nota)+'</div>':'')+'</div>'
+  +'<button class="apagar" onclick="apagar(\''+i.id+'\')" aria-label="Apagar">×</button></div>';
+}
+function itensPainel(){
+ const[a,b]=intervalo(periodo),hoje=somaDias(0);
+ return estado.itens.filter(i=>i.data&&((i.data>=a&&i.data<=b)||(i.data<hoje&&!i.feito))).sort((x,y)=>x.data.localeCompare(y.data));
+}
+function textoResultado(l){
+ return PERIODOS[periodo]+': '+l.filter(i=>!i.feito).length+' por fazer\n'+l.map(i=>(i.feito?'[x] ':'[ ] ')+i.data+' · '+nomeCat(i.cat)+' · '+i.titulo).join('\n');
+}
+function csv(l){
+ const q=t=>'"'+String(t).replace(/"/g,'""')+'"';
+ return['data,categoria,titulo,com,nota,feito'].concat(l.map(i=>[i.data,nomeCat(i.cat),i.titulo,nomesCom(i),i.nota,i.feito?'sim':'não'].map(q).join(','))).join('\n');
+}
+function painel(){
+ const l=itensPainel(),hoje=somaDias(0),pf=l.filter(i=>!i.feito).length;
+ let h='<div class="periodos">'+Object.keys(PERIODOS).map(p=>'<button class="'+(p===periodo?'ativa':'')+'" onclick="mudarPeriodo(\''+p+'\')">'+PERIODOS[p]+'</button>').join('')+'</div>';
+ h+='<div class="resultado"><div class="num">'+pf+'</div><div><b>por fazer</b><br>'+PERIODOS[periodo].toLowerCase()+' ('+(l.length-pf)+' já feitas)</div></div>';
+ h+='<div class="cartao"><h2>Por ordem de acontecimento</h2>';
+ if(!l.length)h+='<p class="vazio">Nada marcado para este período. Abre o menu e adiciona itens.</p>';
+ let ult='';
+ l.forEach(i=>{
+  if(i.data!==ult){ult=i.data;h+='<div class="dia">'+esc(formatarData(i.data))+(i.data<hoje&&!i.feito?'<span class="atraso">em atraso</span>':'')+'</div>';}
+  h+=linha(i,true);
+ });
+ h+='<div class="acoes"><button class="btn" onclick="copiar(textoResultado(itensPainel()))">Copiar resultado</button>'
+  +'<button class="btn sec" onclick="copiar(csv(itensPainel()))">Copiar CSV</button>'
+  +(['itens','pessoas','filmes'].some(k=>estado[k].some(x=>x.exemplo))?'<button class="btn sec" onclick="limparExemplos()">Limpar exemplos</button>':'')
+  +'</div><div class="msg" id="msg"></div></div>';
+ return h;
+}
+function cartaoFilmes(){
+ const v=estado.filmes.slice().sort((a,b)=>b.ov-a.ov);
+ let h='<div class="cartao"><h2>Pódio</h2>';
+ if(!v.length)h+='<p class="vazio">Avalia um filme para ver o pódio.</p>';
+ else h+='<div class="podio">'+[1,0,2].filter(i=>v[i]).map(i=>'<div class="pod"><div class="pt">'+esc(v[i].titulo)+'</div><div class="bar p'+(i+1)+'" style="height:'+(34+v[i].ov*20)+'px">'+v[i].ov.toFixed(1)+'</div><b>'+(i+1)+'º</b></div>').join('')+'</div>';
+ h+='</div><div class="cartao"><h2>O que já vi</h2><div class="form3"><input id="ft" placeholder="Título do filme ou série" aria-label="Título"><span></span><button class="btn" onclick="addFilme()">Guardar</button></div><div class="crit">'
+  +CRIT.map(c=>'<label>'+c+'<select class="cr" onchange="prev()">'+[0,1,2,3,4,5].map(n=>'<option'+(n===3?' selected':'')+'>'+n+'</option>').join('')+'</select></label>').join('')
+  +'</div><div class="msg">Overall: <b id="pv">3.0</b> / 5</div>';
+ h+=v.map((f,i)=>'<div class="linha"><div class="corpo"><div class="tit">'+(i+1)+'. '+esc(f.titulo)+' <span class="tag">'+f.ov.toFixed(1)+'</span>'+(f.exemplo?'<span class="tag ex">exemplo</span>':'')+'</div><div class="nota">'+CRIT.map((c,k)=>c+' '+f.r[k]).join(' · ')+'</div></div><button class="apagar" onclick="apagarFilme(\''+f.id+'\')" aria-label="Apagar">×</button></div>').join('')+'</div>';
+ return h;
+}
+function cartaoPessoas(id){
+ const p=estado.pessoas.filter(x=>x.cat===id);
+ return'<div class="cartao"><h2>Pessoas</h2><div class="form3"><input id="pn" placeholder="Nome" aria-label="Nome"><select id="ps" aria-label="Sexo"><option value="F">Feminino</option><option value="M">Masculino</option></select><button class="btn" onclick="addPessoa(\''+id+'\')">Adicionar</button></div>'
+  +(p.length?p.map(x=>'<span class="chip">'+(x.sexo==='F'?'♀':'♂')+' '+esc(x.nome)+(x.exemplo?' (exemplo)':'')+'<button class="apagar" onclick="apagarPessoa(\''+x.id+'\')" aria-label="Apagar">×</button></span>').join(''):'<p class="vazio">Adiciona as primeiras pessoas.</p>')+'</div>';
+}
+function categoria(id){
+ const c=todas().find(x=>x.id===id);
+ if(!c)return painel();
+ const pess=estado.pessoas.filter(x=>x.cat===id);
+ const l=estado.itens.filter(i=>i.cat===id).sort((x,y)=>(x.feito-y.feito)||(x.data||'9999').localeCompare(y.data||'9999'));
+ let h=(c.filmes?cartaoFilmes():'')+(c.pessoas?cartaoPessoas(id):'');
+ h+='<div class="cartao"><h2>'+(c.filmes?'Para ver':esc(c.nome))+'</h2>'
+  +'<div class="form"><input id="f-tit" placeholder="'+c.dica+'" aria-label="Título"><input id="f-data" type="date" aria-label="Data"><input id="f-nota" placeholder="Nota (opcional)" aria-label="Nota"><button class="btn" onclick="adicionar(\''+id+'\')">Adicionar</button></div>';
+ if(c.pessoas&&pess.length)h+='<div class="chips"><span class="nota">Com quem: </span>'+pess.map(x=>'<label class="chip"><input type="checkbox" class="cq" value="'+x.id+'"> '+esc(x.nome)+'</label>').join('')+'</div>';
+ h+='<div class="msg" id="msg"></div>';
+ if(!l.length)h+='<p class="vazio">Ainda não há nada aqui. Adiciona o primeiro item.</p>';
+ h+=l.map(i=>linha(i,false)).join('');
+ if(c.custom)h+='<div class="acoes"><button class="btn sec" onclick="apagarCat(\''+id+'\')">Apagar esta categoria</button></div>';
+ return h+'</div>';
+}
+
+/* ---------- Minijogos ---------- */
+function recorde(k,v){const r=estado.rec;if(r[k]===undefined||v<r[k]){r[k]=v;guardar();return' Novo recorde!';}return'';}
+function jogos(){
+ const r=estado.rec,t=(k,u)=>r[k]!==undefined?r[k]+' '+u:'—';
+ return'<div class="cartao"><h2>Minijogos</h2><p class="nota">Uma pausa para a cabeça. Recordes: memória '+t('memoria','jogadas')+' · reflexos '+t('reflexos','ms')+' · adivinha '+t('adivinha','tentativas')+'.</p>'
+  +'<div class="acoes"><button class="btn" onclick="jMemoria()">Memória</button><button class="btn" onclick="jReflexos()">Reflexos</button><button class="btn" onclick="jAdivinha()">Adivinha o número</button></div>'
+  +'<div class="jogo" id="jogo"><p class="vazio">Escolhe um jogo.</p></div></div>';
+}
+function jMemoria(){
+ const em=['🎬','🎸','🍿','🎨','📚','⚽','🌱','🎮'];
+ const c=[...em,...em].sort(()=>Math.random()-.5);
+ let aberta=[],jogadas=0,pares=0,bloq=false;
+ $('jogo').innerHTML='<p class="nota">Encontra os 8 pares.</p><div class="grelha">'+c.map((x,i)=>'<button class="carta" data-i="'+i+'" aria-label="Carta">?</button>').join('')+'</div><div class="msg" id="jm">Jogadas: 0</div>';
+ document.querySelectorAll('.carta').forEach(b=>b.onclick=()=>{
+  if(bloq||b.classList.contains('v'))return;
+  b.textContent=c[+b.dataset.i];b.classList.add('v');aberta.push(b);
+  if(aberta.length<2)return;
+  jogadas++;const x=aberta[0],y=aberta[1];
+  if(x.textContent===y.textContent){pares++;aberta=[];}
+  else{bloq=true;setTimeout(()=>{[x,y].forEach(k=>{k.textContent='?';k.classList.remove('v');});aberta=[];bloq=false;},700);}
+  $('jm').textContent='Jogadas: '+jogadas+(pares===8?' · Ganhaste!'+recorde('memoria',jogadas):'');
+ });
+}
+function jReflexos(){
+ $('jogo').innerHTML='<p class="nota">Clica quando ficar azul-claro. Quanto mais rápido, melhor.</p><button class="reflexo espera" id="jr">Clica para começar</button><div class="msg" id="jm"></div>';
+ let s='parado',t0=0,tm;
+ $('jr').onclick=()=>{
+  const b=$('jr');
+  if(s==='parado'){s='espera';b.className='reflexo espera';b.textContent='Espera…';tm=setTimeout(()=>{s='ja';t0=Date.now();b.className='reflexo ja';b.textContent='Agora!';},1000+Math.random()*2500);}
+  else if(s==='espera'){clearTimeout(tm);s='parado';b.textContent='Cedo demais! Clica para tentar outra vez';}
+  else{const ms=Date.now()-t0;s='parado';b.className='reflexo espera';b.textContent='Clica para jogar outra vez';$('jm').textContent=ms+' ms.'+recorde('reflexos',ms);}
+ };
+}
+function jAdivinha(){
+ const n=1+Math.floor(Math.random()*50);let t=0;
+ $('jogo').innerHTML='<p class="nota">Estou a pensar num número entre 1 e 50.</p><div class="form3"><input id="jn" type="number" min="1" max="50" aria-label="Número"><span></span><button class="btn" id="jb">Tentar</button></div><div class="msg" id="jm"></div>';
+ $('jb').onclick=()=>{
+  const v=+$('jn').value;if(!v)return;t++;
+  $('jm').textContent=v===n?'Acertaste em '+t+' tentativas!'+recorde('adivinha',t):(v<n?'Mais alto ↑':'Mais baixo ↓')+' (tentativa '+t+')';
+ };
+}
+
+/* ---------- Arranque ---------- */
+function render(){
+ const b=(id,n)=>'<button class="mi'+(id===aba?' ativa':'')+'" onclick="irPara(\''+id+'\')">'+n+'</button>';
+ $('menu').innerHTML='<h2>Menu</h2>'+b('painel','Painel')+todas().map(c=>b(c.id,esc(c.nome))).join('')+b('jogos','Minijogos')
+  +'<div class="nova"><input id="nc" placeholder="Nova categoria" aria-label="Nova categoria"><button class="btn" onclick="novaCat()">Adicionar categoria</button></div>';
+ $('conteudo').innerHTML=aba==='painel'?painel():aba==='jogos'?jogos():categoria(aba);
+}
+render();
+</script>
+</body>
+</html>
